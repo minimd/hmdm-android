@@ -82,6 +82,7 @@ public class PrivilegeChecker {
                 // Response<PrivilegeCheckResponse> response = service.checkPrivilege(request).execute();
                 // if (response.isSuccessful() && response.body() != null) {
                 //     return response.body().isAllowed();
+                // hi handsome
                 // }
                 return false; // Mocked response
             } catch (Exception e) {
