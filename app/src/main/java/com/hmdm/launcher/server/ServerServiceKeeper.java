@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hmdm.launcher.BuildConfig;
 import com.hmdm.launcher.Const;
 import com.hmdm.launcher.helper.SettingsHelper;
+import com.hmdm.launcher.privilege.PrivilegeCheckService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -37,10 +38,17 @@ public class ServerServiceKeeper {
     private static ServerService serverServiceInstance;
     private static ServerService secondaryServerServiceInstance;
 
+    // A new instance for the privilege check service
+    private static PrivilegeCheckService privilegeCheckServiceInstance;
+    // Mock URL for the privilege check API
+    private static final String PRIVILEGE_API_MOCK_URL = "https://example.com/";
+
+
     // This is called after changing the server URL
     public static void resetServices() {
         serverServiceInstance = null;
         secondaryServerServiceInstance = null;
+        privilegeCheckServiceInstance = null;
     }
 
     public static ServerService getServerServiceInstance(Context context) {
@@ -71,6 +79,19 @@ public class ServerServiceKeeper {
         return secondaryServerServiceInstance;
     }
 
+    /**
+     * Creates and/or returns a singleton instance of the PrivilegeCheckService.
+     *
+     * @param context The application context.
+     * @return An instance of PrivilegeCheckService.
+     */
+    public static PrivilegeCheckService getPrivilegeCheckServiceInstance(Context context) {
+        if (privilegeCheckServiceInstance == null) {
+            privilegeCheckServiceInstance = createPrivilegeCheckService(PRIVILEGE_API_MOCK_URL);
+        }
+        return privilegeCheckServiceInstance;
+    }
+
     // Made public for downloading from third party servers
     public static ServerService createServerService(String baseUrl) {
         return createBuilder(baseUrl, Const.CONNECTION_TIMEOUT).build().create(ServerService.class);
@@ -80,6 +101,18 @@ public class ServerServiceKeeper {
     public static ServerService createServerService(String baseUrl, long readTimeout) {
         return createBuilder(baseUrl, readTimeout).build().create(ServerService.class);
     }
+
+
+    /**
+     * Creates a new instance of the PrivilegeCheckService using Retrofit.
+     *
+     * @param baseUrl The base URL of the privilege check API.
+     * @return A new instance of PrivilegeCheckService.
+     */
+    private static PrivilegeCheckService createPrivilegeCheckService(String baseUrl) {
+        return createBuilder(baseUrl, Const.CONNECTION_TIMEOUT).build().create(PrivilegeCheckService.class);
+    }
+
 
     private static Retrofit.Builder createBuilder(String baseUrl, long readTimeout) {
         Retrofit.Builder builder = new Retrofit.Builder();

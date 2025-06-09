@@ -25,6 +25,7 @@ import com.hmdm.launcher.R;
 import com.hmdm.launcher.databinding.ItemAppBinding;
 import com.hmdm.launcher.helper.SettingsHelper;
 import com.hmdm.launcher.json.ServerConfig;
+import com.hmdm.launcher.privilege.PrivilegeChecker;
 import com.hmdm.launcher.server.UnsafeOkHttpClient;
 import com.hmdm.launcher.util.AppInfo;
 import com.hmdm.launcher.util.InstallUtils;
@@ -266,7 +267,31 @@ public class BaseAppListAdapter extends RecyclerView.Adapter<BaseAppListAdapter.
         return false;
     };
 
+    /**
+     * This is the main method for launching an application.
+     * It now includes a privilege check before proceeding.
+     *
+     * @param appInfo Information about the application to be launched.
+     */
     protected void chooseApp(AppInfo appInfo) {
+        PrivilegeChecker.checkPrivilege(parentActivity, appInfo.packageName, isAllowed -> {
+            if (isAllowed) {
+                // If the user has privileges, proceed with launching the app.
+                launchApp(appInfo);
+            } else {
+                // If not, show a message to the user.
+                Toast.makeText(parentActivity, R.string.app_launch_denied, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /**
+     * Contains the original logic for launching an application, web link, or intent.
+     * This is now called by chooseApp() after a successful privilege check.
+     *
+     * @param appInfo Information about the application to be launched.
+     */
+    private void launchApp(AppInfo appInfo) {
         switch (appInfo.type) {
             case AppInfo.TYPE_APP:
                 Intent launchIntent = parentActivity.getPackageManager().getLaunchIntentForPackage(
@@ -343,6 +368,7 @@ public class BaseAppListAdapter extends RecyclerView.Adapter<BaseAppListAdapter.
             appChooseListener.onAppChoose(appInfo);
         }
     }
+
 
     public boolean onKey(final int keyCode) {
         AppInfo shortcutAppInfo = shortcuts.get(new Integer(keyCode));
